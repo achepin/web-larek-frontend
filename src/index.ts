@@ -1,10 +1,18 @@
 // Подключаю стили
+// Подключаю стили проекта, включая SCSS с переменными, миксинами и т.п.
 import './scss/styles.scss';
 
+// Импортирую класс Api для работы с сервером (запросы товаров и заказов)
 import { Api } from './components/base/api';
 
+// Получаю элемент галереи, куда будут добавляться карточки товаров
+// Получаю ссылку на контейнер, в который буду вставлять карточки товаров
 const gallery = document.querySelector('.gallery');
+// Модальное окно — универсальное для карточек, корзины и заказов
+// Получаю DOM-элемент модального окна для отображения карточек и корзины
 const modal = document.querySelector<HTMLElement>('#modal-container');
+// Модальное окно — универсальное для карточек, корзины и заказов
+// Получаю DOM-элемент модального окна для отображения карточек и корзины
 const modalContent = modal?.querySelector('.modal__content');
 const cardPreviewTemplate = document.querySelector<HTMLTemplateElement>('#card-preview');
 const cartCounter = document.querySelector('.header__basket-counter');
@@ -15,15 +23,25 @@ const orderTemplate = document.querySelector<HTMLTemplateElement>('#order');
 const contactsTemplate = document.querySelector<HTMLTemplateElement>('#contacts');
 const successTemplate = document.querySelector<HTMLTemplateElement>('#success');
 
+// Здесь я задаю базовый адрес API — это основа для всех запросов к серверу
 const apiOrigin = 'https://larek-api.nomoreparties.co';
+// Указываю базовые URL'ы для API и CDN (загрузка изображений)
+// Формирую полный путь к эндпоинту API, по которому получаю список товаров
 const API_URL = `${apiOrigin}/api/weblarek`;
+// Указываю базовый путь для подгрузки изображений товаров
 const CDN_URL = `${apiOrigin}/content/weblarek`;
 
 const api = new Api(API_URL);
 
+// Массив с ID товаров, добавленных в корзину
+// Здесь я храню массив id добавленных в корзину товаров
 const cart: string[] = [];
+// Хранилище всех загруженных товаров по ID
+// Создаю объект, в который буду складывать все товары по id для быстрого доступа
 const productsMap: Record<string, any> = {};
 
+// Функция возвращает CSS-класс по названию категории товара
+// Функция для сопоставления названия категории и нужного CSS-класса
 function getCategoryClass(category: string): string {
   switch (category) {
     case 'софт-скил': return 'card__category_soft';
@@ -115,6 +133,7 @@ function renderContacts(orderData: any, total: number) {
 
   modalContent.innerHTML = '';
   modalContent.appendChild(fragment);
+// Активирую модальное окно — добавляю класс, который делает его видимым
   modal.classList.add('modal_active');
   checkFormValidity();
 }
@@ -130,6 +149,7 @@ function renderSuccess(total: number) {
 
   modalContent.innerHTML = '';
   modalContent.appendChild(fragment);
+// Активирую модальное окно — добавляю класс, который делает его видимым
   modal.classList.add('modal_active');
 }
 
@@ -145,6 +165,7 @@ function renderBasket() {
   list!.innerHTML = '';
 
   cart.forEach((id, index) => {
+// Создаю объект, в который буду складывать все товары по id для быстрого доступа
     const product = productsMap[id];
     const item = basketItemTemplate.content.cloneNode(true) as HTMLElement;
 
@@ -212,14 +233,20 @@ function renderBasket() {
 
   modalContent.innerHTML = '';
   modalContent.appendChild(basketFragment);
+// Активирую модальное окно — добавляю класс, который делает его видимым
   modal.classList.add('modal_active');
 }
 
+// Получаю список товаров с сервера и создаю карточки
 api.get('/product').then((data: any) => {
+// Обрабатываю каждый товар из ответа API
   data.items.forEach((product: any) => {
     const imageUrl = `${CDN_URL}${product.image}`;
+// Создаю объект, в который буду складывать все товары по id для быстрого доступа
     productsMap[product.id] = product;
 
+// Создаю DOM-элемент карточки вручную, чтобы управлять порядком элементов
+// Создаю DOM-элемент карточки товара вручную — так я могу контролировать порядок вложенности
     const card = document.createElement('button');
     card.classList.add('card', 'gallery__item');
 
@@ -246,6 +273,8 @@ api.get('/product').then((data: any) => {
 
     card.append(category, title, imageWrapper, price);
 
+// Обрабатываю клик по карточке — открываю модальное окно с информацией
+// Добавляю обработчик клика по карточке, чтобы открыть детальный просмотр товара
     card.addEventListener('click', () => {
       const cardElement = cardPreviewTemplate?.content.cloneNode(true) as HTMLElement;
       if (!cardElement || !modal || !modalContent) return;
@@ -274,6 +303,7 @@ api.get('/product').then((data: any) => {
 
       modalContent.innerHTML = '';
       modalContent.appendChild(cardElement);
+// Активирую модальное окно — добавляю класс, который делает его видимым
       modal.classList.add('modal_active');
     });
 
@@ -281,8 +311,11 @@ api.get('/product').then((data: any) => {
   });
 });
 
+// Пока что здесь заглушка для открытия корзины
 basketButton?.addEventListener('click', renderBasket);
 
+// Модальное окно — универсальное для карточек, корзины и заказов
+// Получаю DOM-элемент модального окна для отображения карточек и корзины
 const modals = document.querySelectorAll<HTMLElement>('.modal');
 modals.forEach((modal) => {
   const closeButton = modal.querySelector('.modal__close');

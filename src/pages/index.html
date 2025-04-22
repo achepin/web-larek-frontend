@@ -1,44 +1,27 @@
 <!doctype html>
-<html class="no-js" lang="ru">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#000000" />
-
-  <!-- Иконки для разных платформ -->
-  <link rel="icon" href="/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
-  <meta name="msapplication-TileColor" content="#000000">
-
   <title>WebLarek</title>
-  <meta name="description" content="">
 </head>
-
 <body class="page">
   <div class="page__wrapper">
-    <!-- Хедер с логотипом и кнопкой корзины -->
     <header class="header">
       <div class="header__container">
-        <!-- Логотип — svg вставляется через Webpack -->
         <a class="header__logo" href="/">
-          <img class="header__logo-image" src="<%=require('../images/logo.svg')%>" alt="Film! logo" />
+          <img class="header__logo-image" src="<%=require('../images/logo.svg')%>" alt="WebLarek logo" />
         </a>
-
-        <!-- Кнопка для открытия корзины -->
         <button class="header__basket">
           <span class="header__basket-counter">0</span>
         </button>
       </div>
     </header>
 
-    <!-- Главная галерея товаров. Наполняется динамически через JavaScript -->
     <main class="gallery"></main>
   </div>
 
-  <!-- Общий контейнер для модальных окон -->
+  <!-- Модальное окно -->
   <div class="modal" id="modal-container">
     <div class="modal__container">
       <button class="modal__close" aria-label="закрыть"></button>
@@ -46,23 +29,43 @@
     </div>
   </div>
 
-  <!-- Карточка товара для предпросмотра в модальном окне -->
+  <!-- Шаблон карточки товара -->
+  <template id="card-catalog">
+    <button class="gallery__item card">
+      <span class="card__category"></span>
+      <h2 class="card__title"></h2>
+      <img class="card__image" src="" alt="" />
+      <span class="card__price"></span>
+    </button>
+  </template>
+
+  <!-- Шаблон карточки для модального окна (предпросмотр) -->
   <template id="card-preview">
     <div class="card card_full">
       <img class="card__image" src="" alt="" />
       <div class="card__column">
-        <span class="card__category">категория</span>
-        <h2 class="card__title">название</h2>
-        <p class="card__text">описание</p>
+        <span class="card__category card__category_other"></span>
+        <h2 class="card__title"></h2>
+        <p class="card__text"></p>
         <div class="card__row">
           <button class="button card__button">В корзину</button>
-          <span class="card__price">цена</span>
+          <span class="card__price"></span>
         </div>
       </div>
     </div>
   </template>
 
-  <!-- Шаблон корзины: список товаров, кнопка оформления и общая сумма -->
+  <!-- Шаблон для товара в корзине -->
+  <template id="card-basket">
+    <li class="basket__item card card_compact">
+      <span class="basket__item-index"></span>
+      <span class="card__title"></span>
+      <span class="card__price"></span>
+      <button class="basket__item-delete card__button" aria-label="удалить"></button>
+    </li>
+  </template>
+
+  <!-- Шаблон корзины -->
   <template id="basket">
     <div class="basket">
       <h2 class="modal__title">Корзина</h2>
@@ -74,17 +77,7 @@
     </div>
   </template>
 
-  <!-- Шаблон одного товара в корзине -->
-  <template id="card-basket">
-    <li class="basket__item card card_compact">
-      <span class="basket__item-index">1</span>
-      <span class="card__title">Название товара</span>
-      <span class="card__price">Цена товара</span>
-      <button class="basket__item-delete card__button" aria-label="удалить"></button>
-    </li>
-  </template>
-
-  <!-- Шаг 1. Форма выбора способа оплаты и ввода адреса доставки -->
+  <!-- Шаблон формы оплаты и адреса -->
   <template id="order">
     <form class="form" name="order">
       <div class="order">
@@ -107,7 +100,7 @@
     </form>
   </template>
 
-  <!-- Шаг 2. Контактные данные: email и телефон -->
+  <!-- Шаблон формы контактов -->
   <template id="contacts">
     <form class="form" name="contacts">
       <div class="order">
@@ -117,17 +110,17 @@
         </label>
         <label class="order__field">
           <span class="form__label modal__title">Телефон</span>
-          <input name="phone" class="form__input" type="text" placeholder="+7 (9" />
+          <input name="phone" class="form__input" type="text" placeholder="+7 (" />
         </label>
       </div>
       <div class="modal__actions">
-        <button type="submit" class="button">Оплатить</button>
+        <button type="submit" disabled class="button">Оплатить</button>
         <span class="form__errors"></span>
       </div>
     </form>
   </template>
 
-  <!-- Сообщение об успешном оформлении заказа -->
+  <!-- Шаблон успешного заказа -->
   <template id="success">
     <div class="order-success">
       <h2 class="order-success__title">Заказ оформлен</h2>

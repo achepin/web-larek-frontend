@@ -1,61 +1,42 @@
-// Тип ответа от API, когда приходит список
 export type ApiListResponse<Type> = {
-    total: number;
-    items: Type[];
-  };
-  
-  // Разрешённые методы запроса
-  export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
-  
-  // Класс для общения с сервером — обёртка над fetch
-  export class Api {
+    total: number,
+    items: Type[]
+};
+
+export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
+
+export class Api {
     readonly baseUrl: string;
     protected options: RequestInit;
-  
+
     constructor(baseUrl: string, options: RequestInit = {}) {
-      // Подчищаю слэш на конце, чтобы не было // при склейке
-      this.baseUrl = baseUrl.replace(/\/+$/, '');
-      this.options = {
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.headers as object ?? {})
-        }
-      };
+        this.baseUrl = baseUrl;
+        this.options = {
+            headers: {
+                'Content-Type': 'application/json',
+                ...(options.headers as object ?? {})
+            }
+        };
     }
-  
-    // Обрабатываю ответ сервера. Использую дженерик, чтобы знать тип ответа.
-    protected handleResponse<T>(response: Response): Promise<T> {
-      if (response.ok) {
-        return response.json();
-      } else {
-        return response.json()
-          .then((data) => {
-            const message = data?.error || `Ошибка: ${response.status}`;
-            return Promise.reject(message);
-          })
-          .catch(() => {
-            // Если даже json не получился, просто выдам статус
-            return Promise.reject(`Ошибка: ${response.status}`);
-          });
-      }
+
+    protected handleResponse(response: Response): Promise<object> {
+        if (response.ok) return response.json();
+        else return response.json()
+            .then(data => Promise.reject(data.error ?? response.statusText));
     }
-  
-    // GET-запрос. Добавляю ведущий слэш к uri при необходимости.
+
     get<T>(uri: string): Promise<T> {
-      const fullUrl = `${this.baseUrl}${uri.startsWith('/') ? uri : '/' + uri}`;
-      return fetch(fullUrl, {
-        ...this.options,
-        method: 'GET'
-      }).then((res) => this.handleResponse<T>(res));
+        return fetch(this.baseUrl + uri, {
+          ...this.options,
+          method: 'GET'
+        }).then(this.handleResponse as (response: Response) => Promise<T>);
+      }
+
+    post(uri: string, data: object, method: ApiPostMethods = 'POST') {
+        return fetch(this.baseUrl + uri, {
+            ...this.options,
+            method,
+            body: JSON.stringify(data)
+        }).then(this.handleResponse);
     }
-  
-    // POST/PUT/DELETE-запрос. Всё тоже самое, только с телом.
-    post<T>(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<T> {
-      const fullUrl = `${this.baseUrl}${uri.startsWith('/') ? uri : '/' + uri}`;
-      return fetch(fullUrl, {
-        ...this.options,
-        method,
-        body: JSON.stringify(data)
-      }).then((res) => this.handleResponse<T>(res));
-    }
-  }
+}

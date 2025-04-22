@@ -5,29 +5,16 @@
   @include mixins.button($primary, white, $hover);
   border: 0;
 
-  &:disabled {
-    background-color: #3b3b3b; // или любой другой тёмный, неяркий цвет
-    color: #888;
-    opacity: 0.5;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-
   &_alt {
     @include mixins.button(white, $primaryLight, $primaryLight);
     border: $defaultBorder;
-
     &:hover {
       border: $hoverBorder;
     }
+  }
 
-    &:disabled {
-      background-color: #3b3b3b;
-      color: #666;
-      border: $defaultBorder;
-      box-shadow: none;
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
+  &_alt-active {
+    @include mixins.button(white, $primaryLight, $primaryLight);
+    border: $hoverBorder;
   }
 }

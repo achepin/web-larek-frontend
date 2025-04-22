@@ -43,10 +43,5 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier ./src --write",
     "deploy": "gh-pages -d dist"
-  },
-  "dependencies": {
-    "npm": "^11.3.0",
-    "run": "^1.5.0",
-    "start": "^5.1.0"
   }
 }

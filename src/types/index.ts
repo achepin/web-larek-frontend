@@ -1,7 +1,8 @@
 // Тип данных для одного товара
 export interface IProduct {
   id: string;                    // Уникальный идентификатор товара
-  name: string;                  // Название товара
+  title?: string;                // Название товара (из API)
+  name?: string;                 // Название товара (внутреннее использование)
   price: number | null;          // Цена товара (может быть null, если товар бесценен)
   description: string;           // Подробное описание товара
   category: string;              // Категория (например, "UI", "Backend" и т.д.)

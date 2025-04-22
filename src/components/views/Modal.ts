@@ -37,17 +37,28 @@ export class Modal {
     }
 
     open(content: HTMLElement): void {
-        this.content.innerHTML = '';
-        this.content.appendChild(content);
+        // Сохраняем текущий контент, если он есть
+        const currentContent = this.content.firstElementChild;
+        
+        // Проверяем, нужно ли сохранять состояние текущей формы
+        if (currentContent && 
+            currentContent.classList.contains('form') && 
+            content.classList.contains('form')) {
+            // Не очищаем контент, просто заменяем его
+            this.content.replaceChild(content, currentContent);
+        } else {
+            // В остальных случаях очищаем и добавляем новый контент
+            this.content.innerHTML = '';
+            this.content.appendChild(content);
+        }
+        
         this.element.classList.add('modal_active');
-        // Добавляем обработчик Escape при открытии
         document.addEventListener('keydown', this.escHandler);
     }
 
     close(): void {
         this.element.classList.remove('modal_active');
         this.content.innerHTML = '';
-        // Удаляем обработчик Escape при закрытии
         document.removeEventListener('keydown', this.escHandler);
     }
 

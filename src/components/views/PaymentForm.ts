@@ -6,9 +6,6 @@ export class PaymentForm extends CheckoutForm {
 
     constructor(onSubmit: (data: { payment: string; address: string }) => void) {
         super('order', onSubmit);
-        
-        this.paymentButtons = Array.from(this.form.querySelectorAll('.button_alt'));
-        this.addressInput = this.form.querySelector('input[name="address"]') as HTMLInputElement;
     }
 
     protected handleSubmit(e: Event): void {
@@ -16,10 +13,10 @@ export class PaymentForm extends CheckoutForm {
         if (this.validate()) {
             const activeButton = this.paymentButtons.find(button => 
                 button.classList.contains('button_alt-active'));
-                
+
             const data = {
                 payment: activeButton?.name || '',
-                address: this.addressInput.value
+                address: this.addressInput.value.trim()
             };
             
             this.onSubmit(data);
@@ -28,6 +25,8 @@ export class PaymentForm extends CheckoutForm {
 
     protected validate(): boolean {
         const errors: string[] = [];
+        
+        // Проверяем выбран ли способ оплаты
         const activeButton = this.paymentButtons.find(button => 
             button.classList.contains('button_alt-active'));
         
@@ -35,10 +34,12 @@ export class PaymentForm extends CheckoutForm {
             errors.push('Выберите способ оплаты');
         }
 
-        if (!this.addressInput.value.trim()) {
+        // Проверяем адрес
+        const addressValue = this.addressInput.value.trim();
+        if (!addressValue) {
             errors.push('Введите адрес доставки');
-        } else if (this.addressInput.value.trim().length < 5) {
-            errors.push('Адрес должен быть не короче 5 символов');
+        } else if (addressValue.length < 1) {
+            errors.push('Адрес должен содержать минимум 1 символ');
         }
 
         this.button.disabled = errors.length > 0;
@@ -48,9 +49,12 @@ export class PaymentForm extends CheckoutForm {
 
     render(): HTMLFormElement {
         const form = super.render();
+        
+        // Получаем новые ссылки на элементы после клонирования
         this.paymentButtons = Array.from(form.querySelectorAll('.button_alt'));
         this.addressInput = form.querySelector('input[name="address"]') as HTMLInputElement;
-        
+        this.button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
         // Добавляем обработчики для кнопок оплаты
         this.paymentButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -60,10 +64,16 @@ export class PaymentForm extends CheckoutForm {
             });
         });
 
-        // Добавляем обработчик для валидации при вводе адреса
+        // Добавляем обработчик для адреса
         this.addressInput.addEventListener('input', () => {
             this.validate();
         });
+
+        // Добавляем обработчик отправки формы
+        form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // Изначально кнопка должна быть неактивна
+        this.button.disabled = true;
 
         return form;
     }

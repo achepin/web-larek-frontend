@@ -27,79 +27,78 @@ const modal = new Modal();
 
 // Инициализация отображения корзины
 const cartView = new CartView(eventEmitter, (product: IProduct) => {
-    cartModel.removeFromCart(product.id);
+	cartModel.removeFromCart(product.id);
 });
 
 // Инициализация карточек товаров
 const productCard = new ProductCard(
-    document.querySelector('#card-catalog') as HTMLTemplateElement,
-    (id: string) => {
-        const product = productModel.getProductById(id);
-        if (product) {
-            modal.open(productCard.renderPreview(product));
-            const buyButton = modal.getContent().querySelector('.card__button');
-            buyButton?.addEventListener('click', () => {
-                cartModel.addToCart(product);
-                modal.close();
-            });
-        }
-    }
+	document.querySelector('#card-catalog') as HTMLTemplateElement,
+	(id: string) => {
+		const product = productModel.getProductById(id);
+		if (product) {
+			modal.open(productCard.renderPreview(product));
+			const buyButton = modal.getContent().querySelector('.card__button');
+			buyButton?.addEventListener('click', () => {
+				cartModel.addToCart(product);
+				modal.close();
+			});
+		}
+	}
 );
 
 // Отображение каталога товаров
 const gallery = document.querySelector('.gallery') as HTMLElement;
+
 productModel.on('products-updated', (products: IProduct[]) => {
-    gallery.innerHTML = '';
-    products.forEach((product: IProduct) => {
-        gallery.appendChild(productCard.render(product));
-    });
+	gallery.innerHTML = '';
+	products.forEach((product: IProduct) => {
+		const cardElement = productCard.render(product);
+		gallery.appendChild(cardElement);
+	});
 });
 
 // Подписка на открытие корзины
 eventEmitter.on('cart:open', () => {
-    modal.open(cartView.render(cartModel.getCartState()));
+	modal.open(cartView.render(cartModel.getCartState()));
 });
 
-// Глобальная подписка на изменения корзины
+// Подписка на изменения корзины
 cartModel.on('cart-change', (state: CartState) => {
-    // Обновляем счетчик в любом случае
-    cartView.render(state);
-    
-    // Обновляем содержимое корзины, если она открыта
-    const basketContent = modal.getContent().querySelector('.basket');
-    if (basketContent) {
-        modal.open(cartView.render(state));
-    }
+	cartView.render(state);
+	const basketContent = modal.getContent().querySelector('.basket');
+	if (basketContent) {
+		modal.open(cartView.render(state));
+	}
 });
 
-// Обработка событий оформления заказа
+// Обработка оформления заказа
 eventEmitter.on('order:submit', () => {
-    const paymentForm = new PaymentForm((paymentData: PaymentFormData) => {
-        const contactForm = new ContactForm(async (contactData: ContactFormData) => {
-            const orderData: OrderData = {
-                ...paymentData,
-                ...contactData,
-                items: cartModel.getCartState().items.map(item => item.product.id),
-                total: cartModel.getCartState().totalPrice
-            };
+	const paymentForm = new PaymentForm((paymentData: PaymentFormData) => {
+		const contactForm = new ContactForm(async (contactData: ContactFormData) => {
+			const orderData: OrderData = {
+				...paymentData,
+				...contactData,
+				items: cartModel.getCartState().items.map(item => item.product.id),
+				total: cartModel.getCartState().totalPrice
+			};
 
-            if (orderModel.validateOrder(orderData)) {
-                try {
-                    await orderModel.submitOrder(orderData);
-                    const successModal = new OrderSuccessModal(() => {
-                        modal.close();
-                        cartModel.clearCart();
-                    });
-                    modal.open(successModal.render(orderData.total));
-                } catch (error) {
-                    console.error('Ошибка при оформлении заказа:', error);
-                }
-            }
-        });
-        modal.open(contactForm.render());
-    });
-    modal.open(paymentForm.render());
+			if (orderModel.validateOrder(orderData)) {
+				try {
+					await orderModel.submitOrder(orderData);
+					const successModal = new OrderSuccessModal(() => {
+						modal.close();
+						cartModel.clearCart();
+					});
+					modal.open(successModal.render(orderData.total));
+				} catch (error) {
+					// Ошибку можно вывести пользователю в интерфейсе, если нужно
+				}
+			}
+		});
+		modal.open(contactForm.render());
+	});
+	modal.open(paymentForm.render());
 });
 
-// Загрузка товаров при старте
+// Загрузка товаров
 productModel.fetchProducts();

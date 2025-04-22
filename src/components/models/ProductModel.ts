@@ -1,38 +1,35 @@
-// Импортирую EventEmitter для возможности подписки на события
 import { EventEmitter } from '../base/EventEmitter';
-// Импортирую интерфейсы для продукта и ответа от API
 import { IProduct, ApiListResponse } from '../../types';
-// Импортирую класс API для запросов к серверу
 import { Api } from '../base/api';
 
-// Класс модели товаров, расширяет EventEmitter для взаимодействия через события
 export class ProductModel extends EventEmitter {
-  private products: IProduct[] = []; // Список всех полученных товаров
+	private products: IProduct[] = [];
+	private api: Api;
 
-  constructor(private api: Api) {
-    super();
-  }
+	constructor(api: Api) {
+		super();
+		this.api = api;
+	}
 
-  // Метод получения товаров с сервера
-  async fetchProducts(): Promise<void> {
-    try {
-      // Используем просто /product, так как baseUrl уже содержит /api/weblarek
-      const response = await this.api.get<ApiListResponse<IProduct>>('/product');
-      this.products = response.items;
-      // Генерирую событие, чтобы View-компоненты могли отреагировать на обновление списка товаров
-      this.emit('products-updated', this.products);
-    } catch (error) {
-      console.error('Ошибка при получении списка товаров:', error);
-    }
-  }
+	async fetchProducts(): Promise<void> {
+		try {
+			const response = await this.api.get<ApiListResponse<any>>('/product');
+			// Преобразуем title -> name, чтобы соответствовать интерфейсу IProduct
+			this.products = response.items.map(item => ({
+				...item,
+				name: item.title // преобразуем title в name
+			}));
+			this.emit('products-updated', this.products);
+		} catch (error) {
+			// Обработка ошибок
+		}
+	}
 
-  // Получить товар по его id
-  getProductById(id: string): IProduct | undefined {
-    return this.products.find(product => product.id === id);
-  }
+	getProductById(id: string): IProduct | undefined {
+		return this.products.find(product => product.id === id);
+	}
 
-  // Получить весь список товаров
-  getAllProducts(): IProduct[] {
-    return this.products;
-  }
+	getAllProducts(): IProduct[] {
+		return this.products;
+	}
 }

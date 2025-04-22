@@ -20,7 +20,7 @@ export class OrderModel extends EventEmitter {
     validateOrder(order: Partial<OrderData>): boolean {
         const errors: string[] = [];
 
-        if (!order.address || order.address.length < 5) {
+        if (!order.address || order.address.length < 1) {
             errors.push('Некорректный адрес доставки');
         }
 

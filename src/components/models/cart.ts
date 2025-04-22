@@ -1,5 +1,5 @@
 
-import { EventEmitter } from '../base/events';
+import { EventEmitter } from '../base/EventEmitter';
 import { IProduct } from '../../types';
 
 export interface CartItem {

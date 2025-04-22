@@ -6,30 +6,6 @@ export class ContactForm extends CheckoutForm {
 
     constructor(onSubmit: (data: { email: string; phone: string }) => void) {
         super('contacts', onSubmit);
-        
-        this.emailInput = this.form.querySelector('input[name="email"]') as HTMLInputElement;
-        this.phoneInput = this.form.querySelector('input[name="phone"]') as HTMLInputElement;
-
-        // Добавляем маску для телефона
-        this.phoneInput.addEventListener('input', () => {
-            let phone = this.phoneInput.value.replace(/\D/g, '');
-            if (phone.length > 0) {
-                phone = '+' + phone;
-                if (phone.length > 2) {
-                    phone = phone.slice(0, 2) + ' (' + phone.slice(2);
-                }
-                if (phone.length > 7) {
-                    phone = phone.slice(0, 7) + ') ' + phone.slice(7);
-                }
-                if (phone.length > 12) {
-                    phone = phone.slice(0, 12) + '-' + phone.slice(12);
-                }
-                if (phone.length > 15) {
-                    phone = phone.slice(0, 15) + '-' + phone.slice(15);
-                }
-            }
-            this.phoneInput.value = phone;
-        });
     }
 
     protected validate(): boolean {
@@ -54,12 +30,25 @@ export class ContactForm extends CheckoutForm {
         return errors.length === 0;
     }
 
+    protected handleSubmit(e: Event): void {
+        e.preventDefault();
+        if (this.validate()) {
+            this.onSubmit({
+                email: this.emailInput.value.trim(),
+                phone: this.phoneInput.value.trim()
+            });
+        }
+    }
+
     render(): HTMLFormElement {
         const form = super.render();
+        
+        // Обновляем ссылки на элементы формы после клонирования
         this.emailInput = form.querySelector('input[name="email"]') as HTMLInputElement;
         this.phoneInput = form.querySelector('input[name="phone"]') as HTMLInputElement;
+        this.button = form.querySelector('button[type="submit"]') as HTMLButtonElement;
 
-        // Восстанавливаем обработчик маски телефона после клонирования
+        // Добавляем обработчик маски телефона
         this.phoneInput.addEventListener('input', () => {
             let phone = this.phoneInput.value.replace(/\D/g, '');
             if (phone.length > 0) {
@@ -78,7 +67,19 @@ export class ContactForm extends CheckoutForm {
                 }
             }
             this.phoneInput.value = phone;
+            this.validate();
         });
+
+        // Добавляем обработчик для email
+        this.emailInput.addEventListener('input', () => {
+            this.validate();
+        });
+
+        // Добавляем обработчик отправки формы
+        form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // Изначально кнопка должна быть неактивна
+        this.button.disabled = true;
 
         return form;
     }

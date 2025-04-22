@@ -1,3 +1,5 @@
+import { Modal } from './Modal';
+
 export class OrderSuccessModal {
     private template: HTMLTemplateElement;
 
@@ -6,19 +8,23 @@ export class OrderSuccessModal {
     }
 
     render(totalPrice: number): HTMLElement {
-        const modal = this.template.content.cloneNode(true) as HTMLElement;
+        const content = this.template.content.cloneNode(true) as HTMLElement;
+        const modal = content.querySelector('.order-success') as HTMLElement;
         
         // Устанавливаем сумму заказа
         const description = modal.querySelector('.order-success__description') as HTMLElement;
-        description.textContent = `Списано ${totalPrice} синапсов`;
+        if (description) {
+            description.textContent = `Списано ${totalPrice} синапсов`;
+        }
 
-        // Добавляем обработчик для кнопки закрытия
+        // Кнопка закрытия
         const closeButton = modal.querySelector('.order-success__close') as HTMLElement;
-        closeButton.addEventListener('click', (e: Event) => {
-            e.preventDefault();
-            this.onClose();
-        });
-
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                this.onClose();
+            });
+        }
+        
         return modal;
     }
 }

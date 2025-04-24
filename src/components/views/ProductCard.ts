@@ -97,6 +97,15 @@ export class ProductCard {
 			image.alt = productName;
 		}
 
+		// Удаляем кнопку "В корзину" для бесценных товаров
+		if (product.price === null) {
+			const cardRow = card.querySelector('.card__row');
+			const buyButton = cardRow?.querySelector('.card__button');
+			if (buyButton) {
+				buyButton.remove();
+			}
+		}
+
 		return card;
 	}
 }

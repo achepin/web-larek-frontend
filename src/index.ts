@@ -73,31 +73,31 @@ cartModel.on('cart-change', (state: CartState) => {
 
 // Обработка оформления заказа
 eventEmitter.on('order:submit', () => {
-	const paymentForm = new PaymentForm((paymentData: PaymentFormData) => {
-		const contactForm = new ContactForm(async (contactData: ContactFormData) => {
-			const orderData: OrderData = {
-				...paymentData,
-				...contactData,
-				items: cartModel.getCartState().items.map(item => item.product.id),
-				total: cartModel.getCartState().totalPrice
-			};
+    const paymentForm = new PaymentForm((paymentData: PaymentFormData) => {
+        const contactForm = new ContactForm(async (contactData: ContactFormData) => {
+            const orderData: OrderData = {
+                ...paymentData,
+                ...contactData,
+                items: cartModel.getCartState().items.map(item => item.product.id),
+                total: cartModel.getCartState().totalPrice
+            };
 
-			if (orderModel.validateOrder(orderData)) {
-				try {
-					await orderModel.submitOrder(orderData);
-					const successModal = new OrderSuccessModal(() => {
-						modal.close();
-						cartModel.clearCart();
-					});
-					modal.open(successModal.render(orderData.total));
-				} catch (error) {
-					// Ошибку можно вывести пользователю в интерфейсе, если нужно
-				}
-			}
-		});
-		modal.open(contactForm.render());
-	});
-	modal.open(paymentForm.render());
+            if (orderModel.validateOrder(orderData)) {
+                try {
+                    await orderModel.submitOrder(orderData);
+                    cartModel.clearCart(); // Очищаем корзину сразу после успешного сохранения
+                    const successModal = new OrderSuccessModal(() => {
+                        modal.close();
+                    });
+                    modal.open(successModal.render(orderData.total));
+                } catch (error) {
+                    // Ошибку можно вывести пользователю в интерфейсе, если нужно
+                }
+            }
+        });
+        modal.open(contactForm.render());
+    });
+    modal.open(paymentForm.render());
 });
 
 // Загрузка товаров

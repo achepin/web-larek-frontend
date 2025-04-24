@@ -11,6 +11,11 @@ export class CartModel extends EventEmitter {
     }
 
     addToCart(product: IProduct): void {
+        // Проверяем, что у товара есть цена
+        if (product.price === null) {
+            return;
+        }
+
         const existingItem = this.items.find(item => item.product.id === product.id);
         if (existingItem) {
             existingItem.quantity++;

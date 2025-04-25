@@ -11,6 +11,7 @@ import { CartView } from './components/views/CartView';
 import { PaymentForm } from './components/views/PaymentForm';
 import { ContactForm } from './components/views/ContactForm';
 import { OrderSuccessModal } from './components/views/OrderSuccessModal';
+import { PageView } from './components/views/PageView';
 import { IProduct, CartState, OrderData, PaymentFormData, ContactFormData } from './types';
 
 // Инициализация базовых классов
@@ -22,53 +23,45 @@ const productModel = new ProductModel(api);
 const cartModel = new CartModel();
 const orderModel = new OrderModel(api);
 
-// Инициализация модального окна
+// Инициализация отображения
 const modal = new Modal();
-
-// Инициализация отображения корзины
+const page = new PageView(eventEmitter); // <-- Инициализируем главную страницу
 const cartView = new CartView(eventEmitter, (product: IProduct) => {
-	cartModel.removeFromCart(product.id);
+    cartModel.removeFromCart(product.id);
 });
-
-// Инициализация карточек товаров
 const productCard = new ProductCard(
-	document.querySelector('#card-catalog') as HTMLTemplateElement,
-	(id: string) => {
-		const product = productModel.getProductById(id);
-		if (product) {
-			modal.open(productCard.renderPreview(product));
-			const buyButton = modal.getContent().querySelector('.card__button');
-			buyButton?.addEventListener('click', () => {
-				cartModel.addToCart(product);
-				modal.close();
-			});
-		}
-	}
+    document.querySelector('#card-catalog') as HTMLTemplateElement,
+    (id: string) => {
+        const product = productModel.getProductById(id);
+        if (product) {
+            modal.open(productCard.renderPreview(product));
+            const buyButton = modal.getContent().querySelector('.card__button');
+            buyButton?.addEventListener('click', () => {
+                cartModel.addToCart(product);
+                modal.close();
+            });
+        }
+    }
 );
 
-// Отображение каталога товаров
-const gallery = document.querySelector('.gallery') as HTMLElement;
-
+// При загрузке списка товаров
 productModel.on('products-updated', (products: IProduct[]) => {
-	gallery.innerHTML = '';
-	products.forEach((product: IProduct) => {
-		const cardElement = productCard.render(product);
-		gallery.appendChild(cardElement);
-	});
+    const cards = products.map(product => productCard.render(product));
+    page.renderGallery(cards); // <-- через PageView вставляем карточки
 });
 
-// Подписка на открытие корзины
-eventEmitter.on('cart:open', () => {
-	modal.open(cartView.render(cartModel.getCartState()));
-});
-
-// Подписка на изменения корзины
+// При изменении корзины
 cartModel.on('cart-change', (state: CartState) => {
-	cartView.render(state);
-	const basketContent = modal.getContent().querySelector('.basket');
-	if (basketContent) {
-		modal.open(cartView.render(state));
-	}
+    page.updateBasketCounter(state.items.length); // <-- обновляем счётчик корзины
+    const basketContent = modal.getContent().querySelector('.basket');
+    if (basketContent) {
+        modal.open(cartView.render(state));
+    }
+});
+
+// Открытие корзины
+eventEmitter.on('cart:open', () => {
+    modal.open(cartView.render(cartModel.getCartState()));
 });
 
 // Обработка оформления заказа
@@ -85,13 +78,13 @@ eventEmitter.on('order:submit', () => {
             if (orderModel.validateOrder(orderData)) {
                 try {
                     await orderModel.submitOrder(orderData);
-                    cartModel.clearCart(); // Очищаем корзину сразу после успешного сохранения
+                    cartModel.clearCart(); // <-- очищаем корзину при успешном заказе
                     const successModal = new OrderSuccessModal(() => {
                         modal.close();
                     });
                     modal.open(successModal.render(orderData.total));
                 } catch (error) {
-                    // Ошибку можно вывести пользователю в интерфейсе, если нужно
+                    console.error('Ошибка при оформлении заказа:', error);
                 }
             }
         });
@@ -100,5 +93,5 @@ eventEmitter.on('order:submit', () => {
     modal.open(paymentForm.render());
 });
 
-// Загрузка товаров
+// Стартовая загрузка товаров
 productModel.fetchProducts();
